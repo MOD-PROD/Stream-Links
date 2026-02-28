@@ -360,7 +360,14 @@ function renderGrid() {
   grid.innerHTML = '';
 
   // API sites + manuels, limités à maxLinks
-  const all   = [...apiSites, ...manualSites].slice(0, maxLinks);
+  // Dédoublonnage par URL finale — on garde la première occurrence
+  const seen  = new Set();
+  const all   = [...apiSites, ...manualSites].filter(s => {
+    const url = (s.final_url || s.url).split('?')[0].replace(/\/$/, '').toLowerCase();
+    if (seen.has(url)) return false;
+    seen.add(url);
+    return true;
+  }).slice(0, maxLinks);
   const slots = maxLinks; // toujours afficher maxLinks slots
 
   for (let i = 0; i < slots; i++) {

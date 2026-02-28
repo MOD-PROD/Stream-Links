@@ -180,7 +180,15 @@ def get_all_sites():
     order = {s["url"]: i for i, s in enumerate(raw)}
     resolved.sort(key=lambda s: order.get(s["url"], 999))
 
-    return {"sites": resolved, "total": len(resolved), "logs": logs}
+    # Dédoublonnage par URL finale
+    seen_urls, unique = set(), []
+    for s in resolved:
+        final = s.get("final_url", s["url"]).rstrip("/").lower().split("?")[0]
+        if final not in seen_urls:
+            seen_urls.add(final)
+            unique.append(s)
+
+    return {"sites": unique, "total": len(unique), "logs": logs}
 
 class handler(BaseHTTPRequestHandler):
     def do_GET(self):
