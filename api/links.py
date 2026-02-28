@@ -5,10 +5,10 @@ import requests, json, re, time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 GALTRO_URL    = "https://galtro.xyz/m6grt87v4v8d7s/"
-MAX_REDIRECTS = 20
+MAX_REDIRECTS = 25
 TIMEOUT       = 12
 MAX_WORKERS   = 8
-DELAY         = 0.5
+DELAY         = 0.3
 
 HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36",
@@ -25,30 +25,46 @@ def safe_get(url):
 
 def matches_target(url):
     """
-    Pattern final recherché : URL contient /home/
-    ET le dernier segment du path == nom de domaine sans extension
-    ex: https://wiflix.com/home/wiflix  ✓
-        https://batiav.com/home/batiav  ✓
+    Pattern accepté :
+      https://batiav.com/home/batiav
+      https://batiav.com/4k2qyb4h7g44/home/batiav  ← segment aléatoire avant /home/
+    Condition : path contient /home/ ET segment APRES /home/ == nom de domaine
     """
     if not url or '/home/' not in url.lower():
         return False
     try:
-        parsed   = urlparse(url)
-        domain   = parsed.netloc.lower()
-        # enlève www. et prend juste le nom (avant le premier point)
-        name     = domain.replace('www.', '').split('.')[0]
-        # dernier segment du path
-        last_seg = parsed.path.rstrip('/').rsplit('/', 1)[-1].lower()
-        return last_seg == name
+        parsed = urlparse(url)
+        name   = parsed.netloc.lower().replace('www.', '').split('.')[0]
+        m = re.search(r'/home/([^/?#]+)', parsed.path.lower())
+        if not m:
+            return False
+        return m.group(1).rstrip('/') == name
     except Exception:
         return False
 
+def pick_next_link(soup, current_url, visited):
+    """
+    Chaque page intermédiaire ne contient qu'un seul lien cliquable (case/image).
+    On prend simplement le premier lien <a> valide non déjà visité.
+    Priorité au lien qui matche déjà le pattern final.
+    """
+    for a in soup.find_all("a", href=True):
+        raw = a["href"].strip()
+        if not raw or raw.startswith("#") or raw.startswith("javascript"):
+            continue
+        href = urljoin(current_url, raw)
+        if href in visited:
+            continue
+        # Si ce lien est déjà la cible finale, retourne immédiatement
+        if matches_target(href):
+            return href
+        return href  # sinon prend le premier lien disponible
+
+    return None
+
 def follow_chain(start_url):
     """
-    Suit toute la chaîne de redirections (HTTP 3xx + meta-refresh + liens page)
-    jusqu'à trouver une URL qui correspond au pattern /home/nomsite
-    ou jusqu'à MAX_REDIRECTS étapes.
-    Retourne l'URL cible ou None.
+    Suit toute la chaîne de redirections jusqu'au pattern /home/nom
     """
     current = start_url
     visited = set()
@@ -58,80 +74,43 @@ def follow_chain(start_url):
             return None
         visited.add(current)
 
-        # — requête (requests suit déjà les 3xx automatiquement) —
         resp = safe_get(current)
         if not resp:
             return None
 
-        # URL après redirections HTTP
+        # URL après redirections HTTP 3xx
         current = resp.url
 
-        # Vérifie si on est arrivé
         if matches_target(current):
             return current
 
         soup = BeautifulSoup(resp.text, "html.parser")
 
-        # — meta refresh —
+        # meta refresh
         meta = soup.find("meta", attrs={"http-equiv": re.compile("refresh", re.I)})
         if meta and meta.get("content"):
             m = re.search(r'url=["\']?([^"\';\s>]+)', meta["content"], re.I)
             if m:
                 nxt = urljoin(current, m.group(1).strip())
+                if matches_target(nxt):
+                    return nxt
                 if nxt not in visited:
-                    if matches_target(nxt):
-                        return nxt
                     current = nxt
                     time.sleep(DELAY)
                     continue
 
-        # — cherche TOUS les liens <a> de la page, prend le premier pertinent —
-        next_url = None
-
-        # Priorité 1 : lien qui contient déjà /home/
-        for a in soup.find_all("a", href=True):
-            href = urljoin(current, a["href"].strip())
-            if '/home/' in href.lower():
-                if matches_target(href):
-                    return href
-                if href not in visited:
-                    next_url = href
-                    break
-
-        # Priorité 2 : lien avec texte d'action ou paramètre ?u=
-        if not next_url:
-            for a in soup.find_all("a", href=True):
-                text = a.get_text(strip=True).lower()
-                href = urljoin(current, a["href"].strip())
-                raw  = a["href"]
-                if (any(kw in text for kw in ["entrer", "accéder", "enter", "accueil",
-                                               "home", "go", "watch", "voir", "start",
-                                               "continuer", "nouveau", "new", "site"])
-                        or "?u=" in raw or re.search(r'\?u=\w+', raw)):
-                    if href not in visited and href != current:
-                        next_url = href
-                        break
-
-        # Priorité 3 : premier lien externe (autre domaine)
-        if not next_url:
-            current_host = urlparse(current).netloc
-            for a in soup.find_all("a", href=True):
-                href = urljoin(current, a["href"].strip())
-                if urlparse(href).netloc != current_host and href not in visited:
-                    next_url = href
-                    break
-
-        if next_url:
-            current = next_url
+        # Cherche le prochain lien
+        nxt = pick_next_link(soup, current, visited)
+        if nxt:
+            current = nxt
             time.sleep(DELAY)
         else:
-            # Rien à suivre → fin de chaîne, on retourne l'URL courante si elle matche
+            # Aucun lien trouvé — retourne si ça matche, sinon None
             return current if matches_target(current) else None
 
     return None
 
 def scrape_galtro():
-    """Scrape galtro.xyz, retourne liste de {nom, url, desc}."""
     resp = safe_get(GALTRO_URL)
     if not resp:
         return []
@@ -160,7 +139,6 @@ def scrape_galtro():
             if url and nom:
                 sites.append({"nom": nom, "url": url, "desc": desc[:120]})
 
-    # Fallback : tous les liens <a>
     if not sites:
         for a in soup.find_all("a", href=True):
             href = a.get("href", "").strip()
@@ -199,7 +177,6 @@ def get_all_sites():
             if result:
                 resolved.append(result)
 
-    # Remettre dans l'ordre original
     order = {s["url"]: i for i, s in enumerate(raw)}
     resolved.sort(key=lambda s: order.get(s["url"], 999))
 
