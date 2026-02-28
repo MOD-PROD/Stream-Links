@@ -9,487 +9,525 @@
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;600&display=swap" rel="stylesheet" />
   <style>
     :root {
-      --gold: #c9a84c;
-      --gold-light: #e8c96a;
+      --gold:     #c9a84c;
+      --gold-lt:  #e8c96a;
       --gold-dim: #7a6230;
-      --bg: #080a0e;
-      --bg-card: #0f1218;
-      --bg-card-hover: #161c26;
-      --border: rgba(201, 168, 76, 0.2);
-      --border-hover: rgba(201, 168, 76, 0.7);
-      --text: #e8e4d8;
-      --text-dim: #7a7565;
-      --red: #c94c4c;
-      --green: #4cc97a;
+      --gold-glow:rgba(201,168,76,0.15);
+      --bg:       #080a0e;
+      --surf:     #0f1218;
+      --surf2:    #161c26;
+      --border:   rgba(201,168,76,0.15);
+      --border-h: rgba(201,168,76,0.65);
+      --text:     #e8e4d8;
+      --muted:    #52504a;
+      --green:    #4cc97a;
+      --red:      #c94c4c;
     }
-
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
+      font-family: 'Outfit', sans-serif;
       background: var(--bg);
       color: var(--text);
-      font-family: 'Outfit', sans-serif;
-      min-height: 100vh;
-      overflow-x: hidden;
-      user-select: none;
+      height: 100vh; width: 100vw;
+      overflow: hidden;
     }
 
-    /* Cinematic grain overlay */
+    /* grain */
     body::before {
       content: '';
-      position: fixed;
-      inset: 0;
-      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
-      pointer-events: none;
-      z-index: 1000;
-      opacity: 0.6;
+      position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+      pointer-events: none; z-index: 900; opacity: 0.6;
     }
 
-    /* Top vignette */
-    body::after {
-      content: '';
-      position: fixed;
-      top: 0; left: 0; right: 0;
-      height: 200px;
-      background: linear-gradient(to bottom, rgba(0,0,0,0.5), transparent);
-      pointer-events: none;
-      z-index: 10;
-    }
-
-    .app {
-      max-width: 1600px;
-      margin: 0 auto;
-      padding: 48px 60px 60px;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-    }
+    /* ══════════════════════════════════════
+       LAYOUT — deux vues : main / settings
+    ══════════════════════════════════════ */
+    .view { display: none; flex-direction: column; height: 100vh; padding: 2.2rem 3rem 1.8rem; gap: 1.1rem; max-width: 1920px; margin: 0 auto; }
+    .view.active { display: flex; }
 
     /* ── HEADER ── */
-    header {
-      display: flex;
-      align-items: flex-end;
-      justify-content: space-between;
-      margin-bottom: 56px;
-    }
-
-    .brand {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-    }
-
+    header { display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
+    .brand { display: flex; flex-direction: column; gap: 2px; }
     .brand-name {
       font-family: 'Bebas Neue', sans-serif;
-      font-size: clamp(48px, 6vw, 86px);
-      letter-spacing: 0.06em;
-      line-height: 0.9;
-      background: linear-gradient(135deg, var(--gold-light) 0%, var(--gold) 50%, var(--gold-dim) 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      filter: drop-shadow(0 0 30px rgba(201,168,76,0.3));
+      font-size: clamp(44px, 5.5vw, 82px);
+      letter-spacing: 0.06em; line-height: 0.9;
+      background: linear-gradient(135deg, var(--gold-lt) 0%, var(--gold) 50%, var(--gold-dim) 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+      filter: drop-shadow(0 0 22px rgba(201,168,76,0.28));
     }
-
     .brand-sub {
-      font-size: clamp(9px, 1vw, 12px);
-      letter-spacing: 0.35em;
-      color: var(--gold-dim);
-      text-transform: uppercase;
-      font-weight: 300;
-      padding-left: 3px;
+      font-size: clamp(8px, 0.85vw, 11px);
+      letter-spacing: 0.35em; color: var(--gold-dim);
+      text-transform: uppercase; font-weight: 300; padding-left: 3px;
     }
+    .header-right { display: flex; align-items: center; gap: 14px; }
 
-    .status-bar {
-      display: flex;
-      align-items: center;
-      gap: 20px;
+    .badge {
+      font-size: 0.75rem; color: var(--muted);
+      background: var(--surf); border: 1px solid var(--border);
+      padding: 0.38rem 1rem; border-radius: 999px;
+      transition: all 0.3s; letter-spacing: 0.08em;
     }
+    .badge.ok  { color: var(--gold);  border-color: var(--gold-dim); background: var(--gold-glow); }
+    .badge.err { color: var(--red);   border-color: var(--red);      background: rgba(201,76,76,0.1); }
 
-    .status-indicator {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 13px;
-      color: var(--text-dim);
-      letter-spacing: 0.1em;
+    .icon-btn {
+      background: transparent; border: 1px solid var(--border);
+      color: var(--muted); width: 38px; height: 38px; border-radius: 6px;
+      cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center;
+      transition: all 0.2s; flex-shrink: 0;
     }
-
-    .dot {
-      width: 8px; height: 8px;
-      border-radius: 50%;
-      background: var(--text-dim);
-      animation: pulse 2s infinite;
-    }
-    .dot.scanning { background: var(--gold); }
-    .dot.done { background: var(--green); animation: none; }
-    .dot.error { background: var(--red); animation: none; }
-
-    @keyframes pulse {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50% { opacity: 0.4; transform: scale(0.8); }
-    }
+    .icon-btn:hover { border-color: var(--gold-dim); color: var(--gold); }
 
     /* ── DIVIDER ── */
     .divider {
-      height: 1px;
+      flex-shrink: 0; height: 1px;
       background: linear-gradient(to right, transparent, var(--gold-dim), var(--gold), var(--gold-dim), transparent);
-      margin-bottom: 48px;
-      opacity: 0.4;
+      opacity: 0.3;
     }
 
-    /* ── GRID ── */
-    .grid-label {
-      font-size: 10px;
-      letter-spacing: 0.4em;
-      color: var(--text-dim);
-      text-transform: uppercase;
-      margin-bottom: 20px;
+    /* ── LOADING ── */
+    #loading {
+      flex: 1; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 1.25rem;
     }
+    .ring { position: relative; width: 66px; height: 66px; }
+    .ring::before, .ring::after {
+      content: ''; position: absolute; border-radius: 50%; border: 3px solid transparent;
+    }
+    .ring::before { inset: 0; border-top-color: var(--gold); animation: spin 0.9s linear infinite; }
+    .ring::after  { inset: 10px; border-bottom-color: var(--gold-dim); animation: spin 1.4s linear infinite reverse; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    #loadTxt {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.5rem; letter-spacing: 0.15em;
+      color: var(--muted); animation: bpulse 2s ease-in-out infinite;
+    }
+    @keyframes bpulse { 0%,100%{opacity:.35} 50%{opacity:1} }
+    .load-sub { font-size: .7rem; color: var(--muted); opacity: .4; letter-spacing: 0.1em; }
 
-    .tiles-grid {
-      display: grid;
+    /* ── ERROR ── */
+    #errorState { flex: 1; display: none; flex-direction: column; align-items: center; justify-content: center; gap: .75rem; }
+    #errorState.show { display: flex; }
+    #errorState h2 { font-family: 'Bebas Neue', sans-serif; font-size: 2rem; letter-spacing: 0.1em; color: var(--red); }
+    #errorState p  { font-size: .8rem; color: var(--muted); max-width: 380px; text-align: center; line-height: 1.6; }
+    .retry-btn {
+      margin-top: .5rem; padding: .45rem 1.4rem;
+      background: transparent; color: var(--gold);
+      border: 1px solid var(--gold-dim); border-radius: 3px;
+      cursor: pointer; font-family: 'Outfit', sans-serif;
+      font-size: .78rem; letter-spacing: 0.15em; text-transform: uppercase;
+      transition: all .2s;
+    }
+    .retry-btn:hover { background: var(--gold-glow); border-color: var(--gold); }
+
+    /* ── GRID 2×5 ── */
+    #grid {
+      flex: 1; display: none;
       grid-template-columns: repeat(5, 1fr);
       grid-template-rows: repeat(2, 1fr);
-      gap: 16px;
-      flex: 1;
+      gap: 14px;
     }
+    #grid.show { display: grid; }
 
     /* ── TILE ── */
     .tile {
       position: relative;
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: 4px;
-      padding: 28px 24px;
-      cursor: pointer;
-      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
+      background: var(--surf); border: 1px solid var(--border);
+      border-radius: 5px; overflow: hidden;
+      cursor: pointer; outline: none;
+      display: flex; flex-direction: column;
       justify-content: space-between;
-      min-height: 160px;
-      outline: none;
-      text-decoration: none;
+      padding: 24px 22px;
+      transition: transform .28s cubic-bezier(.34,1.56,.64,1), border-color .2s, box-shadow .2s, background .2s;
+      text-decoration: none; color: inherit;
     }
-
     .tile::before {
       content: '';
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(135deg, rgba(201,168,76,0.05) 0%, transparent 60%);
-      opacity: 0;
-      transition: opacity 0.3s;
+      position: absolute; inset: 0;
+      background: linear-gradient(135deg, rgba(201,168,76,.05) 0%, transparent 60%);
+      opacity: 0; transition: opacity .3s;
     }
-
     .tile::after {
       content: '';
-      position: absolute;
-      bottom: 0; left: 0; right: 0;
-      height: 2px;
+      position: absolute; bottom: 0; left: 0; right: 0; height: 2px;
       background: linear-gradient(to right, transparent, var(--gold), transparent);
-      transform: scaleX(0);
-      transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+      transform: scaleX(0); transition: transform .35s ease;
     }
-
-    .tile:hover, .tile:focus {
-      border-color: var(--border-hover);
-      background: var(--bg-card-hover);
-      transform: translateY(-4px);
-      box-shadow: 0 20px 60px rgba(0,0,0,0.6), 0 0 30px rgba(201,168,76,0.08);
+    .tile:hover, .tile.focused {
+      transform: translateY(-5px) scale(1.02);
+      border-color: var(--border-h);
+      background: var(--surf2);
+      box-shadow: 0 18px 50px rgba(0,0,0,.65), 0 0 28px var(--gold-glow);
+      z-index: 10;
     }
+    .tile:hover::before, .tile.focused::before { opacity: 1; }
+    .tile:hover::after,  .tile.focused::after  { transform: scaleX(1); }
 
-    .tile:hover::before, .tile:focus::before { opacity: 1; }
-    .tile:hover::after, .tile:focus::after { transform: scaleX(1); }
-
-    .tile:active { transform: translateY(-2px); }
-
-    .tile.loading {
-      pointer-events: none;
-      opacity: 0.5;
-    }
-
-    .tile.skeleton .tile-name,
-    .tile.skeleton .tile-domain,
-    .tile.skeleton .tile-number {
-      background: rgba(255,255,255,0.06);
-      border-radius: 3px;
-      color: transparent;
-      animation: shimmer 1.5s infinite;
-    }
-
-    @keyframes shimmer {
-      0% { background-position: -200% 0; }
-      100% { background-position: 200% 0; }
-    }
-
-    .tile-number {
+    .tile-num {
       font-family: 'Bebas Neue', sans-serif;
-      font-size: 11px;
-      letter-spacing: 0.3em;
-      color: var(--gold-dim);
-      line-height: 1;
+      font-size: 11px; letter-spacing: 0.3em; color: var(--gold-dim); line-height: 1;
     }
-
-    .tile-center {
-      flex: 1;
-      display: flex;
-      align-items: center;
-      padding: 12px 0;
-    }
-
     .tile-name {
       font-family: 'Bebas Neue', sans-serif;
-      font-size: clamp(22px, 2.2vw, 32px);
-      letter-spacing: 0.08em;
-      line-height: 1.1;
-      color: var(--text);
-      transition: color 0.2s;
+      font-size: clamp(20px, 2vw, 30px);
+      letter-spacing: 0.08em; line-height: 1;
+      transition: color .2s;
+    }
+    .tile:hover .tile-name, .tile.focused .tile-name { color: var(--gold-lt); }
+
+    .tile-bottom { display: flex; align-items: center; justify-content: space-between; }
+    .tile-domain { font-size: 10px; color: var(--muted); letter-spacing: 0.08em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 85%; }
+    .tile-arrow  { font-size: 15px; color: var(--gold-dim); opacity: 0; transition: all .2s; }
+    .tile:hover .tile-arrow, .tile.focused .tile-arrow { opacity: 1; color: var(--gold); transform: translateX(3px); }
+
+    /* tuile vide (slot non rempli) */
+    .tile.empty {
+      opacity: 0.18; pointer-events: none;
+      border-style: dashed;
+    }
+    .tile.manual { border-color: rgba(201,168,76,.3); }
+
+    /* ── KEY HINTS ── */
+    .hints { flex-shrink: 0; display: none; justify-content: center; gap: 1.5rem; }
+    .hints.show { display: flex; }
+    .hint { font-size: .62rem; color: var(--muted); display: flex; align-items: center; gap: .35rem; }
+    .hint kbd {
+      background: var(--surf); border: 1px solid var(--border);
+      padding: .1rem .35rem; border-radius: 3px;
+      font-size: .58rem; color: var(--gold-dim); font-family: monospace;
     }
 
-    .tile:hover .tile-name { color: var(--gold-light); }
+    /* ══════════════════════════════════════
+       VUE PARAMÈTRES
+    ══════════════════════════════════════ */
+    #viewSettings .brand-name { font-size: clamp(36px,4vw,60px); }
 
-    .tile-meta {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
+    .settings-body { flex: 1; display: flex; gap: 2rem; overflow: hidden; }
+    .settings-col { flex: 1; display: flex; flex-direction: column; gap: 1rem; overflow: hidden; }
+
+    .section-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 13px; letter-spacing: 0.35em; color: var(--gold-dim);
+      text-transform: uppercase; border-bottom: 1px solid var(--border);
+      padding-bottom: 8px;
     }
 
-    .tile-domain {
-      font-size: 10px;
-      color: var(--text-dim);
-      letter-spacing: 0.1em;
-      font-weight: 300;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      max-width: 80%;
+    /* Log */
+    #logBox {
+      flex: 1; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--border) transparent;
+      background: var(--surf); border: 1px solid var(--border);
+      border-radius: 5px; padding: .65rem .9rem;
+      font-size: .65rem; color: var(--muted); line-height: 1.9; font-family: monospace;
     }
+    .log-ok  { color: var(--gold); }
+    .log-err { color: var(--red); }
+    .log-info{ color: var(--muted); }
 
-    .tile-arrow {
-      font-size: 16px;
-      color: var(--gold-dim);
-      transition: all 0.2s;
-      opacity: 0;
+    /* Ajout manuel */
+    .manual-form { display: flex; flex-direction: column; gap: 10px; }
+    .field-label { font-size: .7rem; color: var(--muted); letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 2px; }
+    .field-input {
+      background: var(--surf); border: 1px solid var(--border);
+      border-radius: 4px; padding: .5rem .8rem;
+      font-family: 'Outfit', sans-serif; font-size: .8rem; color: var(--text);
+      outline: none; transition: border-color .2s; width: 100%;
     }
-
-    .tile:hover .tile-arrow {
-      opacity: 1;
-      color: var(--gold);
-      transform: translateX(3px);
+    .field-input:focus { border-color: var(--gold-dim); }
+    .field-input::placeholder { color: var(--muted); }
+    .add-btn {
+      background: transparent; border: 1px solid var(--gold-dim);
+      color: var(--gold); border-radius: 3px; padding: .5rem 1.2rem;
+      font-family: 'Outfit', sans-serif; font-size: .78rem;
+      letter-spacing: 0.15em; text-transform: uppercase;
+      cursor: pointer; transition: all .2s; align-self: flex-start;
     }
+    .add-btn:hover { background: var(--gold-glow); border-color: var(--gold); }
 
-    /* ── FOOTER ── */
-    footer {
-      margin-top: 40px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
+    /* Liste liens manuels */
+    #manualList { flex: 1; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--border) transparent; display: flex; flex-direction: column; gap: 6px; }
+    .manual-item {
+      background: var(--surf); border: 1px solid var(--border);
+      border-radius: 4px; padding: .45rem .8rem;
+      display: flex; align-items: center; justify-content: space-between; gap: 8px;
     }
-
-    .footer-text {
-      font-size: 11px;
-      color: var(--text-dim);
-      letter-spacing: 0.15em;
+    .manual-item-info { flex: 1; overflow: hidden; }
+    .manual-item-name { font-size: .8rem; color: var(--text); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .manual-item-url  { font-size: .65rem; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .del-btn {
+      background: transparent; border: none; color: var(--red);
+      cursor: pointer; font-size: 14px; opacity: .5; transition: opacity .2s; flex-shrink: 0;
     }
+    .del-btn:hover { opacity: 1; }
+    .empty-manual { font-size: .72rem; color: var(--muted); opacity: .5; font-style: italic; }
 
-    .refresh-btn {
-      background: transparent;
-      border: 1px solid var(--border);
-      color: var(--text-dim);
-      font-family: 'Outfit', sans-serif;
-      font-size: 11px;
-      letter-spacing: 0.2em;
-      text-transform: uppercase;
-      padding: 10px 20px;
-      border-radius: 3px;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-
-    .refresh-btn:hover {
-      border-color: var(--gold-dim);
-      color: var(--gold);
-    }
-
-    /* Error tile */
-    .tile.error-tile {
-      pointer-events: none;
-      opacity: 0.3;
-    }
-
-    /* Scanlines effect */
-    .scanlines {
-      position: fixed;
-      inset: 0;
-      pointer-events: none;
-      z-index: 999;
-      background: repeating-linear-gradient(
-        0deg,
-        transparent,
-        transparent 2px,
-        rgba(0,0,0,0.03) 2px,
-        rgba(0,0,0,0.03) 4px
-      );
-    }
-
-    /* Animations entrée */
-    @keyframes fadeInUp {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    header { animation: fadeInUp 0.6s ease both; }
-    .divider { animation: fadeInUp 0.6s 0.1s ease both; }
-    .tiles-grid { animation: fadeInUp 0.6s 0.2s ease both; }
-    footer { animation: fadeInUp 0.6s 0.4s ease both; }
+    /* ── ANIMATIONS ── */
+    @keyframes fadeUp { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
+    header { animation: fadeUp .45s ease both; }
+    .divider { animation: fadeUp .45s .07s ease both; }
+    #grid { animation: fadeUp .45s .12s ease both; }
   </style>
 </head>
 <body>
-  <div class="scanlines"></div>
 
-  <div class="app">
-    <header>
-      <div class="brand">
-        <div class="brand-name">Stream Links</div>
-        <div class="brand-sub">Streaming Explorer Engine</div>
-      </div>
-      <div class="status-bar">
-        <div class="status-indicator" id="status">
-          <div class="dot scanning" id="status-dot"></div>
-          <span id="status-text">Scanning sources…</span>
-        </div>
-      </div>
-    </header>
-
-    <div class="divider"></div>
-
-    <div class="grid-label">Liens actifs — 10 sources</div>
-
-    <div class="tiles-grid" id="grid">
-      <!-- Skeleton tiles -->
+<!-- ══════════════ VUE PRINCIPALE ══════════════ -->
+<div class="view active" id="viewMain">
+  <header>
+    <div class="brand">
+      <div class="brand-name">Stream Links</div>
+      <div class="brand-sub">Streaming Explorer Engine</div>
     </div>
+    <div class="header-right">
+      <div id="badge" class="badge">Chargement…</div>
+      <button class="icon-btn" title="Paramètres" onclick="showSettings()">⚙</button>
+    </div>
+  </header>
 
-    <footer>
-      <span class="footer-text">Les liens sont vérifiés et fonctionnels</span>
-      <button class="refresh-btn" onclick="loadLinks()">↻ Actualiser</button>
-    </footer>
+  <div class="divider"></div>
+
+  <div id="loading">
+    <div class="ring"></div>
+    <div id="loadTxt">Résolution des sources…</div>
+    <div class="load-sub">Analyse de galtro.xyz · suivi des redirections /home/</div>
   </div>
 
-  <script>
-    const PLACEHOLDERS = [
-      { name: "FRENCHSTREAM", domain: "frenchstream.lol" },
-      { name: "WIFLIX", domain: "wiflix.store" },
-      { name: "FILMSTREAMING", domain: "filmstreaming1080p.com" },
-      { name: "CPASMIEUX", domain: "cpasmieux.cx" },
-      { name: "TIREXO", domain: "tirexo.biz" },
-      { name: "SOKROSTREAM", domain: "sokrostream.xyz" },
-      { name: "VOIRSERIES", domain: "voirseries.io" },
-      { name: "DPSTREAM", domain: "dpstream.net" },
-      { name: "PAPYSTREAMING", domain: "papystreaming.org" },
-      { name: "STREAMCOMPLET", domain: "streamcomplet.me" },
-    ];
+  <div id="errorState">
+    <h2>Signal perdu</h2>
+    <p id="errorMsg">Une erreur est survenue lors de la résolution des sources.</p>
+    <button class="retry-btn" onclick="loadLinks()">↻ Réessayer</button>
+  </div>
 
-    function getDomain(url) {
-      try {
-        return new URL(url).hostname.replace('www.', '');
-      } catch { return url; }
+  <div id="grid"></div>
+
+  <div class="hints" id="hints">
+    <div class="hint"><kbd>← → ↑ ↓</kbd> Naviguer</div>
+    <div class="hint"><kbd>Enter</kbd> Ouvrir</div>
+    <div class="hint"><kbd>Esc</kbd> Désélectionner</div>
+  </div>
+</div>
+
+<!-- ══════════════ VUE PARAMÈTRES ══════════════ -->
+<div class="view" id="viewSettings">
+  <header>
+    <div class="brand">
+      <div class="brand-name">Paramètres</div>
+      <div class="brand-sub">Stream Links — Configuration</div>
+    </div>
+    <div class="header-right">
+      <button class="icon-btn" title="Retour" onclick="showMain()">✕</button>
+    </div>
+  </header>
+
+  <div class="divider"></div>
+
+  <div class="settings-body">
+
+    <!-- Colonne gauche : log -->
+    <div class="settings-col">
+      <div class="section-title">Journal de résolution</div>
+      <div id="logBox"><span class="log-info">En attente du chargement…</span></div>
+    </div>
+
+    <!-- Colonne droite : liens manuels -->
+    <div class="settings-col">
+      <div class="section-title">Ajouter un lien manuellement</div>
+      <div class="manual-form">
+        <div>
+          <div class="field-label">Nom du site</div>
+          <input class="field-input" id="inputName" type="text" placeholder="ex : MonStream" />
+        </div>
+        <div>
+          <div class="field-label">URL (format /home/ requis)</div>
+          <input class="field-input" id="inputUrl" type="url" placeholder="https://site.com/home/site" />
+        </div>
+        <button class="add-btn" onclick="addManual()">+ Ajouter</button>
+      </div>
+
+      <div class="section-title" style="margin-top:.5rem">Liens manuels enregistrés</div>
+      <div id="manualList"></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ── STATE ──────────────────────────────────────────────────────────────────
+let apiSites   = [];   // sites retournés par l'API
+let apiLogs    = [];   // logs retournés par l'API
+let manualSites = JSON.parse(localStorage.getItem('streamlinks_manual') || '[]');
+let currentIdx = -1;
+let navInited  = false;
+
+// ── HELPERS ────────────────────────────────────────────────────────────────
+const $  = id => document.getElementById(id);
+function getDomain(url) { try { return new URL(url).hostname.replace('www.',''); } catch { return url; } }
+function getName(url)   { try { return new URL(url).hostname.replace('www.','').split('.')[0].toUpperCase(); } catch { return url.toUpperCase(); } }
+
+// ── NAVIGATION VIEWS ───────────────────────────────────────────────────────
+function showSettings() {
+  $('viewMain').classList.remove('active');
+  $('viewSettings').classList.add('active');
+  renderLog();
+  renderManualList();
+}
+function showMain() {
+  $('viewSettings').classList.remove('active');
+  $('viewMain').classList.add('active');
+  renderGrid();  // re-render si des manuels ont changé
+}
+
+// ── GRID RENDER ────────────────────────────────────────────────────────────
+function buildTile(site, index, isManual) {
+  const url  = site.final_url || site.url;
+  const name = site.nom || getName(url);
+  const dom  = getDomain(url);
+  const num  = String(index + 1).padStart(2, '0');
+
+  const a = document.createElement('a');
+  a.className = 'tile' + (isManual ? ' manual' : '');
+  a.href = url; a.target = '_blank'; a.rel = 'noopener noreferrer';
+  a.tabIndex = 0;
+  a.innerHTML = `
+    <div class="tile-num">${num}</div>
+    <div class="tile-name">${name}</div>
+    <div class="tile-bottom">
+      <div class="tile-domain">${dom}</div>
+      <div class="tile-arrow">→</div>
+    </div>`;
+  return a;
+}
+
+function renderGrid() {
+  const grid = $('grid');
+  grid.innerHTML = '';
+
+  const all = [...apiSites, ...manualSites];
+
+  // 10 slots fixes
+  for (let i = 0; i < 10; i++) {
+    if (i < all.length) {
+      grid.appendChild(buildTile(all[i], i, i >= apiSites.length));
+    } else {
+      const empty = document.createElement('div');
+      empty.className = 'tile empty';
+      empty.innerHTML = `<div class="tile-num">${String(i+1).padStart(2,'0')}</div><div class="tile-name" style="color:var(--muted);font-size:16px">—</div><div class="tile-bottom"></div>`;
+      grid.appendChild(empty);
     }
+  }
+}
 
-    function getSiteName(url) {
-      try {
-        const host = new URL(url).hostname.replace('www.', '');
-        return host.split('.')[0].toUpperCase();
-      } catch { return url.toUpperCase(); }
+// ── LOAD LINKS ─────────────────────────────────────────────────────────────
+async function loadLinks() {
+  $('loading').style.display = 'flex';
+  $('grid').classList.remove('show');
+  $('errorState').classList.remove('show');
+  $('hints').classList.remove('show');
+  $('badge').className = 'badge'; $('badge').textContent = 'Chargement…';
+  currentIdx = -1; navInited = false;
+
+  try {
+    const res  = await fetch('/api/links', { signal: AbortSignal.timeout(90000) });
+    if (!res.ok) throw new Error(`Erreur HTTP ${res.status}`);
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+
+    apiSites = data.sites || [];
+    apiLogs  = data.logs  || [];
+
+    $('loading').style.display = 'none';
+    $('grid').classList.add('show');
+    $('hints').classList.add('show');
+    $('badge').textContent = `${apiSites.length} sources actives`;
+    $('badge').className   = 'badge ok';
+
+    renderGrid();
+    initNav();
+
+  } catch (err) {
+    $('loading').style.display = 'none';
+    $('errorMsg').textContent = err.message;
+    $('errorState').classList.add('show');
+    $('badge').textContent = 'Erreur';
+    $('badge').className   = 'badge err';
+    apiLogs = ['ERREUR : ' + err.message];
+  }
+}
+
+// ── LOG ────────────────────────────────────────────────────────────────────
+function renderLog() {
+  const box = $('logBox');
+  if (!apiLogs.length) { box.innerHTML = '<span class="log-info">Aucun log disponible.</span>'; return; }
+  box.innerHTML = apiLogs.map(l => {
+    const cls = l.startsWith('✓') ? 'log-ok' : l.startsWith('✗') ? 'log-err' : 'log-info';
+    return `<div class="${cls}">${l}</div>`;
+  }).join('');
+  box.scrollTop = box.scrollHeight;
+}
+
+// ── LIENS MANUELS ──────────────────────────────────────────────────────────
+function saveManual() { localStorage.setItem('streamlinks_manual', JSON.stringify(manualSites)); }
+
+function addManual() {
+  const name = $('inputName').value.trim();
+  const url  = $('inputUrl').value.trim();
+  if (!url) return;
+  manualSites.push({ nom: name || getName(url), final_url: url, url });
+  saveManual();
+  $('inputName').value = '';
+  $('inputUrl').value  = '';
+  renderManualList();
+}
+
+function deleteManual(i) {
+  manualSites.splice(i, 1);
+  saveManual();
+  renderManualList();
+}
+
+function renderManualList() {
+  const list = $('manualList');
+  if (!manualSites.length) {
+    list.innerHTML = '<div class="empty-manual">Aucun lien ajouté.</div>';
+    return;
+  }
+  list.innerHTML = manualSites.map((s, i) => `
+    <div class="manual-item">
+      <div class="manual-item-info">
+        <div class="manual-item-name">${s.nom}</div>
+        <div class="manual-item-url">${s.final_url || s.url}</div>
+      </div>
+      <button class="del-btn" onclick="deleteManual(${i})">✕</button>
+    </div>`).join('');
+}
+
+// ── NAVIGATION CLAVIER ──────────────────────────────────────────────────────
+function initNav() {
+  if (navInited) return;
+  navInited = true;
+  document.addEventListener('keydown', e => {
+    if ($('viewSettings').classList.contains('active')) return;
+    const tiles = [...$('grid').querySelectorAll('.tile:not(.empty)')];
+    if (!tiles.length) return;
+    const cols = 5;
+    switch (e.key) {
+      case 'ArrowRight': e.preventDefault(); currentIdx = currentIdx < 0 ? 0 : Math.min(currentIdx+1, tiles.length-1); break;
+      case 'ArrowLeft':  e.preventDefault(); currentIdx = currentIdx < 0 ? 0 : Math.max(currentIdx-1, 0); break;
+      case 'ArrowDown':  e.preventDefault(); currentIdx = currentIdx < 0 ? 0 : Math.min(currentIdx+cols, tiles.length-1); break;
+      case 'ArrowUp':    e.preventDefault(); currentIdx = currentIdx < 0 ? 0 : Math.max(currentIdx-cols, 0); break;
+      case 'Enter': if (currentIdx >= 0 && tiles[currentIdx]) tiles[currentIdx].click(); return;
+      case 'Escape': if (currentIdx >= 0) { tiles[currentIdx].classList.remove('focused'); currentIdx = -1; } return;
+      default: return;
     }
+    tiles.forEach((t, j) => t.classList.toggle('focused', j === currentIdx));
+    if (tiles[currentIdx]) tiles[currentIdx].scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  });
+}
 
-    function renderSkeletons() {
-      const grid = document.getElementById('grid');
-      grid.innerHTML = '';
-      for (let i = 0; i < 10; i++) {
-        const el = document.createElement('div');
-        el.className = 'tile skeleton loading';
-        el.innerHTML = `
-          <div class="tile-number">0${i+1 < 10 ? '0'+(i+1) : i+1}</div>
-          <div class="tile-center"><div class="tile-name">${PLACEHOLDERS[i].name}</div></div>
-          <div class="tile-meta">
-            <div class="tile-domain">${PLACEHOLDERS[i].domain}</div>
-            <div class="tile-arrow">→</div>
-          </div>`;
-        grid.appendChild(el);
-      }
-    }
-
-    function renderLinks(links) {
-      const grid = document.getElementById('grid');
-      grid.innerHTML = '';
-
-      // Pad to 10 if fewer results
-      while (links.length < 10) {
-        links.push(null);
-      }
-
-      links.slice(0, 10).forEach((url, i) => {
-        const num = String(i + 1).padStart(2, '0');
-        const el = document.createElement('a');
-
-        if (url) {
-          el.href = url;
-          el.target = '_blank';
-          el.rel = 'noopener noreferrer';
-          el.className = 'tile';
-          el.tabIndex = 0;
-          el.innerHTML = `
-            <div class="tile-number">${num}</div>
-            <div class="tile-center"><div class="tile-name">${getSiteName(url)}</div></div>
-            <div class="tile-meta">
-              <div class="tile-domain">${getDomain(url)}</div>
-              <div class="tile-arrow">→</div>
-            </div>`;
-        } else {
-          el.className = 'tile error-tile';
-          el.innerHTML = `
-            <div class="tile-number">${num}</div>
-            <div class="tile-center"><div class="tile-name" style="color:var(--text-dim);font-size:18px">NON DISPONIBLE</div></div>
-            <div class="tile-meta"><div class="tile-domain">—</div></div>`;
-        }
-
-        grid.appendChild(el);
-      });
-    }
-
-    function setStatus(state, text) {
-      document.getElementById('status-dot').className = `dot ${state}`;
-      document.getElementById('status-text').textContent = text;
-    }
-
-    async function loadLinks() {
-      renderSkeletons();
-      setStatus('scanning', 'Scanning sources…');
-
-      try {
-        const res = await fetch('/api/links');
-        if (!res.ok) throw new Error('API error');
-        const data = await res.json();
-
-        if (data.links && data.links.length > 0) {
-          renderLinks(data.links);
-          setStatus('done', `${data.links.length} liens actifs`);
-        } else {
-          // Fallback: show placeholder tiles as disabled
-          renderLinks([]);
-          setStatus('error', 'Aucun lien trouvé');
-        }
-      } catch (e) {
-        console.error(e);
-        // Show placeholder tiles with mock URLs for demo
-        const fallback = PLACEHOLDERS.map(p => `https://${p.domain}`);
-        renderLinks(fallback);
-        setStatus('error', 'Mode hors ligne — liens non vérifiés');
-      }
-    }
-
-    loadLinks();
-  </script>
+// ── INIT ───────────────────────────────────────────────────────────────────
+window.onload = loadLinks;
+</script>
 </body>
 </html>
