@@ -5,6 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Stream Links</title>
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='10' fill='%23080a0e'/%3E%3Cpolygon points='22,14 22,50 52,32' fill='%23c9a84c'/%3E%3Crect x='8' y='14' width='8' height='36' rx='2' fill='%23c9a84c'/%3E%3C/svg%3E" />
+  <link rel="manifest" href="/manifest.json" />
+  <meta name="theme-color" content="#c9a84c" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Stream Links" />
+  <link rel="apple-touch-icon" href="/icon-192.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;600&display=swap" rel="stylesheet" />
   <style>
@@ -12,34 +19,55 @@
       --gold:      #c9a84c;
       --gold-lt:   #e8c96a;
       --gold-dim:  #7a6230;
-      --gold-glow: rgba(201,168,76,0.15);
+      --gold-glow: rgba(201,168,76,0.18);
       --bg:        #080a0e;
       --surf:      #0f1218;
       --surf2:     #161c26;
       --border:    rgba(201,168,76,0.15);
-      --border-h:  rgba(201,168,76,0.65);
+      --border-h:  rgba(201,168,76,0.7);
       --text:      #e8e4d8;
       --muted:     #52504a;
-      --green:     #4cc97a;
       --red:       #c94c4c;
+      --DEFAULT-BG: url('https://telegra.ph/file/93a2d1aa28048c2b2cdd5.jpg');
+      --DEFAULT-TILE: url('https://telegra.ph/file/0581d9a775560ff77d7fe.jpg');
     }
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
     body {
       font-family: 'Outfit', sans-serif;
-      background: var(--bg);
       color: var(--text);
       height: 100vh; width: 100vw;
       overflow: hidden;
+      background: var(--bg);
     }
+
+    /* ── BACKGROUND SKIN ── */
+    #bgLayer {
+      position: fixed; inset: 0; z-index: 0;
+      background-size: cover; background-position: center;
+      background-repeat: no-repeat;
+      transition: opacity .4s;
+    }
+    /* Overlay sombre pour lisibilité */
+    #bgLayer::after {
+      content: ''; position: absolute; inset: 0;
+      background: rgba(0,0,0,0.55);
+    }
+
+    /* grain */
     body::before {
-      content: '';
-      position: fixed; inset: 0;
+      content: ''; position: fixed; inset: 0;
       background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
-      pointer-events: none; z-index: 900; opacity: 0.6;
+      pointer-events: none; z-index: 901; opacity: 0.5;
     }
 
     /* ── VIEWS ── */
-    .view { display: none; flex-direction: column; height: 100vh; padding: 2rem 3rem 1.8rem; gap: 1rem; max-width: 1920px; margin: 0 auto; }
+    .view {
+      display: none; flex-direction: column;
+      height: 100vh; padding: 2rem 3rem 1.8rem;
+      gap: 1rem; max-width: 1920px; margin: 0 auto;
+      position: relative; z-index: 10;
+    }
     .view.active { display: flex; }
 
     /* ── HEADER ── */
@@ -51,18 +79,18 @@
       letter-spacing: 0.06em; line-height: 0.9;
       background: linear-gradient(135deg, var(--gold-lt) 0%, var(--gold) 50%, var(--gold-dim) 100%);
       -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
-      filter: drop-shadow(0 0 22px rgba(201,168,76,0.28));
+      filter: drop-shadow(0 0 22px rgba(201,168,76,0.35));
     }
     .brand-sub { font-size: clamp(8px, 0.85vw, 11px); letter-spacing: 0.35em; color: var(--gold-dim); text-transform: uppercase; font-weight: 300; padding-left: 3px; }
-    .header-right { display: flex; align-items: center; gap: 14px; }
-    .badge { font-size: 0.75rem; color: var(--muted); background: var(--surf); border: 1px solid var(--border); padding: 0.38rem 1rem; border-radius: 999px; transition: all 0.3s; letter-spacing: 0.08em; }
-    .badge.ok  { color: var(--gold);  border-color: var(--gold-dim); background: var(--gold-glow); }
-    .badge.err { color: var(--red);   border-color: var(--red);      background: rgba(201,76,76,0.1); }
-    .icon-btn { background: transparent; border: 1px solid var(--border); color: var(--muted); width: 38px; height: 38px; border-radius: 6px; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; flex-shrink: 0; }
+    .header-right { display: flex; align-items: center; gap: 12px; }
+    .badge { font-size: 0.75rem; color: var(--muted); background: rgba(15,18,24,0.85); border: 1px solid var(--border); padding: 0.38rem 1rem; border-radius: 999px; transition: all 0.3s; letter-spacing: 0.08em; backdrop-filter: blur(6px); }
+    .badge.ok  { color: var(--gold);  border-color: var(--gold-dim); background: rgba(201,168,76,0.12); }
+    .badge.err { color: var(--red);   border-color: var(--red);      background: rgba(201,76,76,0.12); }
+    .icon-btn { background: rgba(15,18,24,0.8); border: 1px solid var(--border); color: var(--muted); width: 38px; height: 38px; border-radius: 6px; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; flex-shrink: 0; backdrop-filter: blur(6px); }
     .icon-btn:hover { border-color: var(--gold-dim); color: var(--gold); }
 
     /* ── DIVIDER ── */
-    .divider { flex-shrink: 0; height: 1px; background: linear-gradient(to right, transparent, var(--gold-dim), var(--gold), var(--gold-dim), transparent); opacity: 0.3; }
+    .divider { flex-shrink: 0; height: 1px; background: linear-gradient(to right, transparent, var(--gold-dim), var(--gold), var(--gold-dim), transparent); opacity: 0.4; }
 
     /* ── LOADING ── */
     #loading { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1.25rem; }
@@ -83,12 +111,10 @@
     .retry-btn { margin-top: .5rem; padding: .45rem 1.4rem; background: transparent; color: var(--gold); border: 1px solid var(--gold-dim); border-radius: 3px; cursor: pointer; font-family: 'Outfit', sans-serif; font-size: .78rem; letter-spacing: 0.15em; text-transform: uppercase; transition: all .2s; }
     .retry-btn:hover { background: var(--gold-glow); border-color: var(--gold); }
 
-    /* ── GRID : 2 colonnes × 5 lignes ── */
+    /* ── GRID 2 colonnes × N lignes ── */
     #grid {
-      flex: 1;
-      display: none;
+      flex: 1; display: none;
       grid-template-columns: repeat(2, 1fr);
-      grid-template-rows: repeat(5, 1fr);
       gap: 12px;
     }
     #grid.show { display: grid; }
@@ -96,109 +122,159 @@
     /* ── TILE ── */
     .tile {
       position: relative;
-      background: var(--surf); border: 1px solid var(--border);
-      border-radius: 5px; overflow: hidden;
+      border: 1px solid var(--border);
+      border-radius: 6px; overflow: hidden;
       cursor: pointer; outline: none;
-      display: flex; align-items: center;
-      padding: 0 28px;
-      gap: 20px;
-      transition: transform .28s cubic-bezier(.34,1.56,.64,1), border-color .2s, box-shadow .2s, background .2s;
+      display: flex; align-items: center; justify-content: center;
       text-decoration: none; color: inherit;
+      transition: transform .28s cubic-bezier(.34,1.56,.64,1), border-color .2s, box-shadow .2s;
+      /* pas de padding fixe — le nom est centré en flex */
     }
-    .tile::after {
-      content: '';
-      position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
-      background: linear-gradient(to bottom, transparent, var(--gold), transparent);
-      transform: scaleY(0); transition: transform .35s ease;
+
+    /* Fond skin du bouton */
+    .tile-bg {
+      position: absolute; inset: 0;
+      background-size: cover; background-position: center;
+      transition: transform .3s ease;
     }
+    /* Overlay sombre sur le skin bouton */
+    .tile-overlay {
+      position: absolute; inset: 0;
+      background: rgba(0,0,0,0.45);
+      transition: background .2s;
+    }
+
+    .tile:hover .tile-bg, .tile.focused .tile-bg { transform: scale(1.06); }
+    .tile:hover .tile-overlay, .tile.focused .tile-overlay { background: rgba(0,0,0,0.25); }
+
     .tile:hover, .tile.focused {
-      transform: translateX(6px);
       border-color: var(--border-h);
-      background: var(--surf2);
-      box-shadow: 0 8px 40px rgba(0,0,0,.6), 0 0 24px var(--gold-glow);
+      box-shadow: 0 8px 40px rgba(0,0,0,.7), 0 0 28px var(--gold-glow);
       z-index: 10;
+      transform: scale(1.025);
+    }
+
+    /* Barre dorée gauche au hover */
+    .tile::after {
+      content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+      background: linear-gradient(to bottom, transparent, var(--gold), transparent);
+      transform: scaleY(0); transition: transform .3s ease; z-index: 3;
     }
     .tile:hover::after, .tile.focused::after { transform: scaleY(1); }
 
-    .tile-num {
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: 13px; letter-spacing: 0.3em;
-      color: var(--gold-dim); flex-shrink: 0; width: 24px;
-    }
+    /* Nom centré — taille = 1/3 hauteur du bouton via vh */
     .tile-name {
+      position: relative; z-index: 2;
       font-family: 'Bebas Neue', sans-serif;
-      font-size: clamp(24px, 2.8vw, 42px);
-      letter-spacing: 0.08em; line-height: 1;
-      transition: color .2s; flex: 1;
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      letter-spacing: 0.1em; line-height: 1;
+      color: #fff;
+      text-shadow: 0 2px 12px rgba(0,0,0,0.9), 0 0 30px rgba(0,0,0,0.7);
+      transition: color .2s, text-shadow .2s;
+      text-align: center;
+      /* font-size calculé en JS selon hauteur réelle du bouton */
     }
-    .tile:hover .tile-name, .tile.focused .tile-name { color: var(--gold-lt); }
-    .tile-domain { font-size: 11px; color: var(--muted); letter-spacing: 0.08em; flex-shrink: 0; }
-    .tile-arrow  { font-size: 18px; color: var(--gold-dim); opacity: 0; transition: all .2s; flex-shrink: 0; }
-    .tile:hover .tile-arrow, .tile.focused .tile-arrow { opacity: 1; color: var(--gold); transform: translateX(4px); }
+    .tile:hover .tile-name, .tile.focused .tile-name {
+      color: var(--gold-lt);
+      text-shadow: 0 2px 16px rgba(0,0,0,0.9), 0 0 20px rgba(201,168,76,0.5);
+    }
 
-    .tile.empty { opacity: 0.15; pointer-events: none; border-style: dashed; }
-    .tile.manual { border-color: rgba(201,168,76,.28); }
+    .tile.empty { opacity: 0.12; pointer-events: none; border-style: dashed; background: transparent; }
+    .tile.manual { border-color: rgba(201,168,76,.3); }
 
     /* ── KEY HINTS ── */
     .hints { flex-shrink: 0; display: none; justify-content: center; gap: 1.5rem; }
     .hints.show { display: flex; }
     .hint { font-size: .62rem; color: var(--muted); display: flex; align-items: center; gap: .35rem; }
-    .hint kbd { background: var(--surf); border: 1px solid var(--border); padding: .1rem .35rem; border-radius: 3px; font-size: .58rem; color: var(--gold-dim); font-family: monospace; }
+    .hint kbd { background: rgba(15,18,24,0.8); border: 1px solid var(--border); padding: .1rem .35rem; border-radius: 3px; font-size: .58rem; color: var(--gold-dim); font-family: monospace; }
 
-    /* ══════════ PARAMÈTRES ══════════ */
-    #viewSettings .brand-name { font-size: clamp(36px,4vw,60px); }
+    /* ══════════════════ PARAMÈTRES ══════════════════ */
+    #viewSettings .brand-name { font-size: clamp(32px,4vw,56px); }
     .settings-body { flex: 1; display: flex; gap: 2rem; overflow: hidden; }
-    .settings-col  { flex: 1; display: flex; flex-direction: column; gap: 1rem; overflow: hidden; }
-    .section-title { font-family: 'Bebas Neue', sans-serif; font-size: 13px; letter-spacing: 0.35em; color: var(--gold-dim); text-transform: uppercase; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
+    .settings-col  { flex: 1; display: flex; flex-direction: column; gap: .9rem; overflow: hidden; }
+    .section-title { font-family: 'Bebas Neue', sans-serif; font-size: 12px; letter-spacing: 0.35em; color: var(--gold-dim); text-transform: uppercase; border-bottom: 1px solid var(--border); padding-bottom: 7px; flex-shrink: 0; }
 
-    /* Contrôle nombre de liens */
-    .max-control { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
-    .max-label    { font-size: .75rem; color: var(--muted); letter-spacing: 0.1em; }
-    .max-btns     { display: flex; gap: 6px; }
+    /* max links */
+    .max-control { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; flex-shrink: 0; }
+    .max-label { font-size: .72rem; color: var(--muted); }
+    .max-btns  { display: flex; gap: 6px; }
     .max-btn {
       width: 40px; height: 40px; border-radius: 4px;
-      background: var(--surf); border: 1px solid var(--border);
-      color: var(--muted); font-family: 'Bebas Neue', sans-serif;
-      font-size: 18px; letter-spacing: 0.05em;
+      background: rgba(15,18,24,0.8); border: 1px solid var(--border);
+      color: var(--muted); font-family: 'Bebas Neue', sans-serif; font-size: 18px;
       cursor: pointer; transition: all .2s;
       display: flex; align-items: center; justify-content: center;
     }
     .max-btn:hover  { border-color: var(--gold-dim); color: var(--gold); }
     .max-btn.active { border-color: var(--gold); color: var(--gold); background: var(--gold-glow); }
 
-    /* Log */
-    #logBox { flex: 1; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--border) transparent; background: var(--surf); border: 1px solid var(--border); border-radius: 5px; padding: .65rem .9rem; font-size: .65rem; color: var(--muted); line-height: 1.9; font-family: monospace; }
+    /* toggle skins */
+    .toggle-row { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+    .toggle-label { font-size: .78rem; color: var(--text); }
+    .toggle-switch {
+      position: relative; width: 42px; height: 22px; cursor: pointer;
+    }
+    .toggle-switch input { opacity: 0; width: 0; height: 0; }
+    .toggle-slider {
+      position: absolute; inset: 0; border-radius: 999px;
+      background: var(--surf); border: 1px solid var(--border);
+      transition: all .2s;
+    }
+    .toggle-slider::before {
+      content: ''; position: absolute; height: 14px; width: 14px;
+      left: 3px; top: 3px; border-radius: 50%;
+      background: var(--muted); transition: all .2s;
+    }
+    .toggle-switch input:checked + .toggle-slider { background: var(--gold-glow); border-color: var(--gold); }
+    .toggle-switch input:checked + .toggle-slider::before { transform: translateX(20px); background: var(--gold); }
+
+    /* skin inputs */
+    .skin-panel { display: flex; flex-direction: column; gap: .65rem; flex-shrink: 0; }
+    .skin-panel.hidden { display: none; }
+    .skin-row { display: flex; flex-direction: column; gap: 4px; }
+    .field-label { font-size: .68rem; color: var(--muted); letter-spacing: 0.12em; text-transform: uppercase; }
+    .field-input { background: rgba(15,18,24,0.85); border: 1px solid var(--border); border-radius: 4px; padding: .45rem .75rem; font-family: 'Outfit', sans-serif; font-size: .78rem; color: var(--text); outline: none; transition: border-color .2s; width: 100%; }
+    .field-input:focus { border-color: var(--gold-dim); }
+    .field-input::placeholder { color: var(--muted); font-size: .72rem; }
+    .skin-preview { width: 100%; height: 48px; border-radius: 4px; border: 1px solid var(--border); background-size: cover; background-position: center; margin-top: 2px; }
+
+    /* log */
+    #logBox { flex: 1; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--border) transparent; background: rgba(15,18,24,0.8); border: 1px solid var(--border); border-radius: 5px; padding: .6rem .85rem; font-size: .63rem; color: var(--muted); line-height: 1.9; font-family: monospace; }
     .log-ok  { color: var(--gold); }
     .log-err { color: var(--red); }
-    .log-info{ color: var(--muted); }
 
-    /* Ajout manuel */
-    .manual-form { display: flex; flex-direction: column; gap: 10px; }
-    .field-label  { font-size: .7rem; color: var(--muted); letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 2px; }
-    .field-input  { background: var(--surf); border: 1px solid var(--border); border-radius: 4px; padding: .5rem .8rem; font-family: 'Outfit', sans-serif; font-size: .8rem; color: var(--text); outline: none; transition: border-color .2s; width: 100%; }
-    .field-input:focus { border-color: var(--gold-dim); }
-    .field-input::placeholder { color: var(--muted); }
-    .add-btn { background: transparent; border: 1px solid var(--gold-dim); color: var(--gold); border-radius: 3px; padding: .5rem 1.2rem; font-family: 'Outfit', sans-serif; font-size: .78rem; letter-spacing: 0.15em; text-transform: uppercase; cursor: pointer; transition: all .2s; align-self: flex-start; }
+    /* ajout manuel */
+    .manual-form { display: flex; flex-direction: column; gap: 8px; flex-shrink: 0; }
+    .add-btn { background: transparent; border: 1px solid var(--gold-dim); color: var(--gold); border-radius: 3px; padding: .45rem 1.1rem; font-family: 'Outfit', sans-serif; font-size: .76rem; letter-spacing: 0.15em; text-transform: uppercase; cursor: pointer; transition: all .2s; align-self: flex-start; }
     .add-btn:hover { background: var(--gold-glow); border-color: var(--gold); }
-
-    #manualList { flex: 1; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--border) transparent; display: flex; flex-direction: column; gap: 6px; }
-    .manual-item { background: var(--surf); border: 1px solid var(--border); border-radius: 4px; padding: .45rem .8rem; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    #manualList { flex: 1; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--border) transparent; display: flex; flex-direction: column; gap: 5px; }
+    .manual-item { background: rgba(15,18,24,0.8); border: 1px solid var(--border); border-radius: 4px; padding: .4rem .75rem; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
     .manual-item-info { flex: 1; overflow: hidden; }
-    .manual-item-name { font-size: .8rem; color: var(--text); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .manual-item-url  { font-size: .65rem; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .del-btn { background: transparent; border: none; color: var(--red); cursor: pointer; font-size: 14px; opacity: .5; transition: opacity .2s; flex-shrink: 0; }
+    .manual-item-name { font-size: .78rem; color: var(--text); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .manual-item-url  { font-size: .62rem; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .del-btn { background: transparent; border: none; color: var(--red); cursor: pointer; font-size: 13px; opacity: .5; transition: opacity .2s; flex-shrink: 0; }
     .del-btn:hover { opacity: 1; }
-    .empty-manual { font-size: .72rem; color: var(--muted); opacity: .5; font-style: italic; }
+    .empty-txt { font-size: .7rem; color: var(--muted); opacity: .5; font-style: italic; }
 
-    @keyframes fadeUp { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
-    header { animation: fadeUp .45s ease both; }
-    .divider { animation: fadeUp .45s .07s ease both; }
+    /* ── MOBILE ── */
+    @media (max-width: 768px) {
+      .view { padding: 1.1rem 1rem 1rem; gap: 0.7rem; }
+      .brand-name { font-size: 40px !important; }
+      .brand-sub { font-size: 8px; }
+      #grid { grid-template-columns: 1fr !important; overflow-y: auto; }
+      .settings-body { flex-direction: column; overflow-y: auto; }
+      #viewSettings .brand-name { font-size: 30px !important; }
+    }
+
+    @keyframes fadeUp { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+    header  { animation: fadeUp .45s ease both; }
+    .divider{ animation: fadeUp .45s .07s ease both; }
   </style>
 </head>
 <body>
 
-<!-- ══════════════ VUE PRINCIPALE ══════════════ -->
+<div id="bgLayer"></div>
+
+<!-- ══════════ VUE PRINCIPALE ══════════ -->
 <div class="view active" id="viewMain">
   <header>
     <div class="brand">
@@ -207,6 +283,7 @@
     </div>
     <div class="header-right">
       <div id="badge" class="badge">Chargement…</div>
+      <button id="installBtn" class="icon-btn" title="Installer l'app" onclick="installPWA()" style="display:none">⬇</button>
       <button class="icon-btn" title="Paramètres" onclick="showSettings()">⚙</button>
     </div>
   </header>
@@ -220,20 +297,20 @@
 
   <div id="errorState">
     <h2>Signal perdu</h2>
-    <p id="errorMsg">Une erreur est survenue lors de la résolution des sources.</p>
+    <p id="errorMsg">Une erreur est survenue.</p>
     <button class="retry-btn" onclick="loadLinks()">↻ Réessayer</button>
   </div>
 
   <div id="grid"></div>
 
   <div class="hints" id="hints">
-    <div class="hint"><kbd>↑ ↓</kbd> Naviguer</div>
+    <div class="hint"><kbd>↑ ↓ ← →</kbd> Naviguer</div>
     <div class="hint"><kbd>Enter</kbd> Ouvrir</div>
     <div class="hint"><kbd>Esc</kbd> Désélectionner</div>
   </div>
 </div>
 
-<!-- ══════════════ VUE PARAMÈTRES ══════════════ -->
+<!-- ══════════ VUE PARAMÈTRES ══════════ -->
 <div class="view" id="viewSettings">
   <header>
     <div class="brand">
@@ -248,37 +325,70 @@
 
   <div class="settings-body">
 
-    <!-- Colonne gauche -->
+    <!-- COL GAUCHE -->
     <div class="settings-col">
 
-      <div class="section-title">Nombre de liens affichés (max)</div>
+      <div class="section-title">Nombre de liens affichés</div>
       <div class="max-control">
-        <span class="max-label">Nombre pair, maximum 10 :</span>
-        <div class="max-btns" id="maxBtns">
-          <button class="max-btn" data-val="2" onclick="setMax(2)">2</button>
-          <button class="max-btn" data-val="4" onclick="setMax(4)">4</button>
-          <button class="max-btn" data-val="6" onclick="setMax(6)">6</button>
-          <button class="max-btn" data-val="8" onclick="setMax(8)">8</button>
+        <span class="max-label">Nombre pair, max 10 :</span>
+        <div class="max-btns">
+          <button class="max-btn" data-val="2"  onclick="setMax(2)">2</button>
+          <button class="max-btn" data-val="4"  onclick="setMax(4)">4</button>
+          <button class="max-btn" data-val="6"  onclick="setMax(6)">6</button>
+          <button class="max-btn" data-val="8"  onclick="setMax(8)">8</button>
           <button class="max-btn" data-val="10" onclick="setMax(10)">10</button>
         </div>
       </div>
 
-      <div class="section-title" style="margin-top:.5rem">Journal de résolution</div>
-      <div id="logBox"><span class="log-info">En attente du chargement…</span></div>
+      <div class="section-title">Skins</div>
+
+      <!-- Toggle skins -->
+      <div class="toggle-row">
+        <label class="toggle-switch">
+          <input type="checkbox" id="skinsEnabled" onchange="toggleSkins(this.checked)" />
+          <span class="toggle-slider"></span>
+        </label>
+        <span class="toggle-label">Activer les skins personnalisés</span>
+      </div>
+
+      <!-- Panel skins (caché si désactivé) -->
+      <div class="skin-panel hidden" id="skinPanel">
+
+        <div class="skin-row">
+          <div class="field-label">Image de fond (16/9) — URL</div>
+          <input class="field-input" id="inputBg" type="url"
+            placeholder="https://telegra.ph/file/93a2d1aa28048c2b2cdd5.jpg"
+            oninput="previewSkin('bgPreview', this.value, 'https://telegra.ph/file/93a2d1aa28048c2b2cdd5.jpg')" />
+          <div class="skin-preview" id="bgPreview"></div>
+        </div>
+
+        <div class="skin-row">
+          <div class="field-label">Skin boutons — URL</div>
+          <input class="field-input" id="inputTile" type="url"
+            placeholder="https://telegra.ph/file/0581d9a775560ff77d7fe.jpg"
+            oninput="previewSkin('tilePreview', this.value, 'https://telegra.ph/file/0581d9a775560ff77d7fe.jpg')" />
+          <div class="skin-preview" id="tilePreview"></div>
+        </div>
+
+        <button class="add-btn" onclick="saveSkins()">✓ Appliquer</button>
+      </div>
+
+      <div class="section-title">Journal de résolution</div>
+      <div id="logBox"><span>En attente…</span></div>
     </div>
 
-    <!-- Colonne droite -->
+    <!-- COL DROITE -->
     <div class="settings-col">
       <div class="section-title">Ajouter un lien manuellement</div>
       <div class="manual-form">
         <div>
-          <div class="field-label">URL (format /RANDOM/home/nom requis)</div>
+          <div class="field-label">URL (format /RANDOM/home/nom)</div>
           <input class="field-input" id="inputUrl" type="url" placeholder="https://site.com/abc123/home/site" />
         </div>
         <button class="add-btn" onclick="addManual()">+ Ajouter</button>
       </div>
 
-      <div class="section-title" style="margin-top:.5rem">Liens manuels enregistrés</div>
+      <div class="section-title" style="margin-top:.4rem">Liens manuels</div>
       <div id="manualList"></div>
     </div>
 
@@ -286,34 +396,87 @@
 </div>
 
 <script>
-// ── STATE ──────────────────────────────────────────────────────────────────
+// ── STATE ─────────────────────────────────────────────────────────────────
 let apiSites    = [];
 let apiLogs     = [];
 let manualSites = JSON.parse(localStorage.getItem('sl_manual') || '[]');
 let maxLinks    = parseInt(localStorage.getItem('sl_max') || '10');
+let skinsOn     = localStorage.getItem('sl_skins') === '1';
+let skinBg      = localStorage.getItem('sl_bg')   || '';
+let skinTile    = localStorage.getItem('sl_tile') || '';
 let currentIdx  = -1;
 let navInited   = false;
 
-// ── HELPERS ────────────────────────────────────────────────────────────────
+const DEFAULT_BG   = 'https://telegra.ph/file/93a2d1aa28048c2b2cdd5.jpg';
+const DEFAULT_TILE = 'https://telegra.ph/file/0581d9a775560ff77d7fe.jpg';
+
 const $ = id => document.getElementById(id);
 
-function getDomain(url) {
-  try { return new URL(url).hostname.replace('www.',''); } catch { return url; }
-}
-
-// Nom = dernier segment après /home/ dans l'URL
+// ── HELPERS ───────────────────────────────────────────────────────────────
 function getNameFromUrl(url) {
   try {
     const m = url.match(/\/home\/([^/?#]+)/i);
     if (m) return m[1].toUpperCase();
     return new URL(url).hostname.replace('www.','').split('.')[0].toUpperCase();
-  } catch { return url.toUpperCase(); }
+  } catch { return '?'; }
+}
+function getDomain(url) {
+  try { return new URL(url).hostname.replace('www.',''); } catch { return url; }
 }
 
-// ── VIEWS ──────────────────────────────────────────────────────────────────
+// ── SKINS ─────────────────────────────────────────────────────────────────
+function applyBg() {
+  const layer = $('bgLayer');
+  if (skinsOn) {
+    const url = skinBg || DEFAULT_BG;
+    layer.style.backgroundImage = `url('${url}')`;
+    layer.style.opacity = '1';
+  } else {
+    layer.style.opacity = '0';
+    layer.style.backgroundImage = '';
+  }
+}
+
+function getTileBg() {
+  return skinsOn ? (skinTile || DEFAULT_TILE) : null;
+}
+
+function toggleSkins(val) {
+  skinsOn = val;
+  localStorage.setItem('sl_skins', val ? '1' : '0');
+  $('skinPanel').classList.toggle('hidden', !val);
+  applyBg();
+  renderGrid();
+}
+
+function previewSkin(previewId, val, fallback) {
+  const url = val.trim() || fallback;
+  $(previewId).style.backgroundImage = `url('${url}')`;
+}
+
+function saveSkins() {
+  skinBg   = $('inputBg').value.trim();
+  skinTile = $('inputTile').value.trim();
+  localStorage.setItem('sl_bg',   skinBg);
+  localStorage.setItem('sl_tile', skinTile);
+  applyBg();
+  renderGrid();
+}
+
+function initSkinPanel() {
+  $('skinsEnabled').checked = skinsOn;
+  $('skinPanel').classList.toggle('hidden', !skinsOn);
+  if (skinBg)   { $('inputBg').value   = skinBg;   previewSkin('bgPreview',   skinBg,   DEFAULT_BG); }
+  if (skinTile) { $('inputTile').value = skinTile; previewSkin('tilePreview', skinTile, DEFAULT_TILE); }
+  else { previewSkin('tilePreview', '', DEFAULT_TILE); }
+  if (!skinBg)  previewSkin('bgPreview', '', DEFAULT_BG);
+}
+
+// ── VIEWS ─────────────────────────────────────────────────────────────────
 function showSettings() {
   $('viewMain').classList.remove('active');
   $('viewSettings').classList.add('active');
+  initSkinPanel();
   renderLog();
   renderManualList();
   updateMaxBtns();
@@ -324,34 +487,58 @@ function showMain() {
   renderGrid();
 }
 
-// ── MAX LINKS ──────────────────────────────────────────────────────────────
+// ── MAX LINKS ─────────────────────────────────────────────────────────────
 function setMax(val) {
   maxLinks = val;
   localStorage.setItem('sl_max', val);
   updateMaxBtns();
 }
 function updateMaxBtns() {
-  document.querySelectorAll('.max-btn').forEach(btn => {
-    btn.classList.toggle('active', parseInt(btn.dataset.val) === maxLinks);
-  });
+  document.querySelectorAll('.max-btn').forEach(b =>
+    b.classList.toggle('active', parseInt(b.dataset.val) === maxLinks)
+  );
 }
 
-// ── GRID ───────────────────────────────────────────────────────────────────
-function buildTile(site, index, isManual) {
-  const url    = site.final_url || site.url;
-  const name   = getNameFromUrl(url);
-  const domain = getDomain(url);
-  const num    = String(index + 1).padStart(2, '0');
+// ── GRID ──────────────────────────────────────────────────────────────────
+function buildTile(site, isManual) {
+  const url   = site.final_url || site.url;
+  const name  = getNameFromUrl(url);
+  const tileBg = getTileBg();
 
   const a = document.createElement('a');
   a.className = 'tile' + (isManual ? ' manual' : '');
   a.href = url; a.target = '_blank'; a.rel = 'noopener noreferrer';
   a.tabIndex = 0;
-  a.innerHTML = `
-    <div class="tile-num">${num}</div>
-    <div class="tile-name">${name}</div>
-    <div class="tile-domain">${domain}</div>
-    <div class="tile-arrow">→</div>`;
+
+  // Fond skin bouton
+  const bg = document.createElement('div');
+  bg.className = 'tile-bg';
+  if (tileBg) bg.style.backgroundImage = `url('${tileBg}')`;
+  else bg.style.background = 'var(--surf)';
+
+  // Overlay
+  const ov = document.createElement('div');
+  ov.className = 'tile-overlay';
+  if (!tileBg) ov.style.background = 'transparent';
+
+  // Nom centré
+  const nm = document.createElement('div');
+  nm.className = 'tile-name';
+  nm.textContent = name;
+
+  a.appendChild(bg);
+  a.appendChild(ov);
+  a.appendChild(nm);
+
+  // Calcul taille texte = 1/3 hauteur du bouton (via ResizeObserver)
+  const ro = new ResizeObserver(entries => {
+    for (const e of entries) {
+      const h = e.contentRect.height;
+      nm.style.fontSize = Math.max(14, Math.round(h / 3)) + 'px';
+    }
+  });
+  ro.observe(a);
+
   return a;
 }
 
@@ -359,34 +546,35 @@ function renderGrid() {
   const grid = $('grid');
   grid.innerHTML = '';
 
-  // API sites + manuels, limités à maxLinks
-  // Dédoublonnage par URL finale — on garde la première occurrence
-  const seen  = new Set();
-  const all   = [...apiSites, ...manualSites].filter(s => {
-    const url = (s.final_url || s.url).split('?')[0].replace(/\/$/, '').toLowerCase();
-    if (seen.has(url)) return false;
-    seen.add(url);
-    return true;
+  const seen = new Set();
+  const all  = [...apiSites, ...manualSites].filter(s => {
+    const u = (s.final_url || s.url).split('?')[0].replace(/\/$/, '').toLowerCase();
+    if (seen.has(u)) return false;
+    seen.add(u); return true;
   }).slice(0, maxLinks);
-  const slots = maxLinks; // toujours afficher maxLinks slots
+
+  const slots = maxLinks;
 
   for (let i = 0; i < slots; i++) {
     if (i < all.length) {
-      grid.appendChild(buildTile(all[i], i, i >= apiSites.length));
+      grid.appendChild(buildTile(all[i], i >= apiSites.length));
     } else {
       const empty = document.createElement('div');
       empty.className = 'tile empty';
-      empty.innerHTML = `<div class="tile-num">${String(i+1).padStart(2,'0')}</div><div class="tile-name" style="color:var(--muted);font-size:18px">—</div>`;
       grid.appendChild(empty);
     }
   }
 
-  // Ajuste la grille selon le nombre de slots (toujours 2 colonnes)
-  const rows = slots / 2;
-  grid.style.gridTemplateRows = `repeat(${rows}, 1fr)`;
+  // Rows
+  const isMobile = window.innerWidth <= 768;
+  if (!isMobile) {
+    grid.style.gridTemplateRows = `repeat(${slots / 2}, 1fr)`;
+  } else {
+    grid.style.gridTemplateRows = '';
+  }
 }
 
-// ── LOAD ───────────────────────────────────────────────────────────────────
+// ── LOAD ──────────────────────────────────────────────────────────────────
 async function loadLinks() {
   $('loading').style.display = 'flex';
   $('grid').classList.remove('show');
@@ -412,53 +600,42 @@ async function loadLinks() {
 
     renderGrid();
     initNav();
-
   } catch (err) {
     $('loading').style.display = 'none';
     $('errorMsg').textContent = err.message;
     $('errorState').classList.add('show');
-    $('badge').textContent = 'Erreur';
-    $('badge').className   = 'badge err';
+    $('badge').textContent = 'Erreur'; $('badge').className = 'badge err';
     apiLogs = ['ERREUR : ' + err.message];
   }
 }
 
-// ── LOG ────────────────────────────────────────────────────────────────────
+// ── LOG ───────────────────────────────────────────────────────────────────
 function renderLog() {
   const box = $('logBox');
-  if (!apiLogs.length) { box.innerHTML = '<span class="log-info">Aucun log disponible.</span>'; return; }
+  if (!apiLogs.length) { box.innerHTML = '<span>Aucun log.</span>'; return; }
   box.innerHTML = apiLogs.map(l => {
-    const cls = l.startsWith('✓') ? 'log-ok' : l.startsWith('✗') ? 'log-err' : 'log-info';
-    return `<div class="${cls}">${l}</div>`;
+    const c = l.startsWith('✓') ? 'log-ok' : l.startsWith('✗') ? 'log-err' : '';
+    return `<div class="${c}">${l}</div>`;
   }).join('');
   box.scrollTop = box.scrollHeight;
 }
 
-// ── LIENS MANUELS ──────────────────────────────────────────────────────────
+// ── MANUELS ───────────────────────────────────────────────────────────────
 function saveManual() { localStorage.setItem('sl_manual', JSON.stringify(manualSites)); }
 
 function addManual() {
   const url = $('inputUrl').value.trim();
   if (!url) return;
-  const name = getNameFromUrl(url);
-  manualSites.push({ nom: name, final_url: url, url });
-  saveManual();
-  $('inputUrl').value = '';
+  manualSites.push({ nom: getNameFromUrl(url), final_url: url, url });
+  saveManual(); $('inputUrl').value = '';
   renderManualList();
 }
-
 function deleteManual(i) {
-  manualSites.splice(i, 1);
-  saveManual();
-  renderManualList();
+  manualSites.splice(i, 1); saveManual(); renderManualList();
 }
-
 function renderManualList() {
   const list = $('manualList');
-  if (!manualSites.length) {
-    list.innerHTML = '<div class="empty-manual">Aucun lien ajouté.</div>';
-    return;
-  }
+  if (!manualSites.length) { list.innerHTML = '<div class="empty-txt">Aucun lien ajouté.</div>'; return; }
   list.innerHTML = manualSites.map((s, i) => `
     <div class="manual-item">
       <div class="manual-item-info">
@@ -469,31 +646,48 @@ function renderManualList() {
     </div>`).join('');
 }
 
-// ── NAVIGATION CLAVIER ─────────────────────────────────────────────────────
+// ── NAV CLAVIER ───────────────────────────────────────────────────────────
 function initNav() {
-  if (navInited) return;
-  navInited = true;
+  if (navInited) return; navInited = true;
   document.addEventListener('keydown', e => {
     if ($('viewSettings').classList.contains('active')) return;
     const tiles = [...$('grid').querySelectorAll('.tile:not(.empty)')];
     if (!tiles.length) return;
-    // 2 colonnes → navigation haut/bas avance de 1, gauche/droite change de colonne
+    const cols = window.innerWidth <= 768 ? 1 : 2;
     switch (e.key) {
-      case 'ArrowDown':  e.preventDefault(); currentIdx = currentIdx < 0 ? 0 : Math.min(currentIdx + 1, tiles.length - 1); break;
-      case 'ArrowUp':    e.preventDefault(); currentIdx = currentIdx < 0 ? 0 : Math.max(currentIdx - 1, 0); break;
-      case 'ArrowRight': e.preventDefault(); currentIdx = currentIdx < 0 ? 0 : Math.min(currentIdx + (maxLinks/2), tiles.length - 1); break;
-      case 'ArrowLeft':  e.preventDefault(); currentIdx = currentIdx < 0 ? 0 : Math.max(currentIdx - (maxLinks/2), 0); break;
-      case 'Enter': if (currentIdx >= 0 && tiles[currentIdx]) tiles[currentIdx].click(); return;
+      case 'ArrowDown':  e.preventDefault(); currentIdx = Math.min((currentIdx < 0 ? -cols : currentIdx) + cols, tiles.length - 1); break;
+      case 'ArrowUp':    e.preventDefault(); currentIdx = Math.max((currentIdx < 0 ? cols : currentIdx) - cols, 0); break;
+      case 'ArrowRight': e.preventDefault(); if (cols > 1) currentIdx = Math.min((currentIdx < 0 ? 0 : currentIdx) + 1, tiles.length - 1); break;
+      case 'ArrowLeft':  e.preventDefault(); if (cols > 1) currentIdx = Math.max((currentIdx < 0 ? 1 : currentIdx) - 1, 0); break;
+      case 'Enter': if (currentIdx >= 0) tiles[currentIdx].click(); return;
       case 'Escape': if (currentIdx >= 0) { tiles[currentIdx].classList.remove('focused'); currentIdx = -1; } return;
       default: return;
     }
+    if (currentIdx < 0) currentIdx = 0;
     tiles.forEach((t, j) => t.classList.toggle('focused', j === currentIdx));
-    if (tiles[currentIdx]) tiles[currentIdx].scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    tiles[currentIdx]?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   });
 }
 
-// ── INIT ───────────────────────────────────────────────────────────────────
+// ── PWA ───────────────────────────────────────────────────────────────────
+let deferredPrompt = null;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault(); deferredPrompt = e;
+  $('installBtn').style.display = 'flex';
+});
+function installPWA() {
+  if (!deferredPrompt) return;
+  deferredPrompt.prompt();
+  deferredPrompt.userChoice.then(() => { deferredPrompt = null; $('installBtn').style.display = 'none'; });
+}
+window.addEventListener('appinstalled', () => { $('installBtn').style.display = 'none'; });
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(() => {}));
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────
 updateMaxBtns();
+applyBg();
 window.onload = loadLinks;
 </script>
 </body>
